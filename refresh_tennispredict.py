@@ -245,7 +245,47 @@ def main():
     print(f"OK: {target_date_short} total users (unique user_id) = {len(user_ids)}")
     print(f"OK: wrote counts (overwritten) -> player_count_{tag}_main.csv / _alt.csv")
 
+    # ---- Hybrid model data layer: publish to docs/data ----
+    import os, json, glob, re
+    from datetime import datetime, timezone
 
+    data_dir = os.path.join("docs", "data")
+    os.makedirs(data_dir, exist_ok=True)
+
+    # Copy today's count csv into docs/data
+    src_main = f"player_count_{tag}_main.csv"
+    src_alt  = f"player_count_{tag}_alt.csv"
+    dst_main = os.path.join(data_dir, src_main)
+    dst_alt  = os.path.join(data_dir, src_alt)
+
+    with open(src_main, "rb") as fsrc, open(dst_main, "wb") as fdst:
+        fdst.write(fsrc.read())
+    with open(src_alt, "rb") as fsrc, open(dst_alt, "wb") as fdst:
+        fdst.write(fsrc.read())
+
+    # Build manifest.json from existing main files
+    dates = []
+    for p in glob.glob(os.path.join(data_dir, "player_count_*_main.csv")):
+        m = re.search(r"player_count_(\d{4})_main\.csv$", os.path.basename(p))
+        if m:
+            dates.append(m.group(1))
+    dates = sorted(set(dates))
+    latest = dates[-1] if dates else None
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    version = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+    manifest = {"dates": dates, "latest": latest}
+    latest_json = {"latest": latest, "updated_at": now, "version": version}
+
+    with open(os.path.join(data_dir, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    with open(os.path.join(data_dir, "latest.json"), "w", encoding="utf-8") as f:
+        json.dump(latest_json, f, ensure_ascii=False, indent=2)
+
+    print(f"[publish] wrote {dst_main}, {dst_alt}", flush=True)
+    print(f"[publish] updated docs/data/manifest.json and latest.json (latest={latest}, version={version})", flush=True)
+    
 if __name__ == "__main__":
     try:
         main()
