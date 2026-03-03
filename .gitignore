@@ -1,0 +1,12 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Data outputs (generated)
+picks_*.csv
+player_count_*.csv
+cookiejar.txt
+page.html
+
+# Local logs
+*.log

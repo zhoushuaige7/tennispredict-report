@@ -24,9 +24,9 @@ except Exception:
 
 
 # ===== Fixed config =====
-EVENT_ID = 134
 YEAR = 2026
-REFERER = "https://www.live-tennis.cn/zh/survivor/event/20807/2026/MS/detail"
+EVENT_ID = 30609
+REFERER = "https://www.live-tennis.cn/zh/survivor/event/30609/2026/WS/detail"
 API = f"https://www.live-tennis.cn/zh/survivor/event/{EVENT_ID}/{YEAR}/detail"
 UA = "Mozilla/5.0"
 
@@ -176,9 +176,11 @@ def main():
 
     total = int(first.get("recordsTotal") or 0)
     data0 = first.get("data") or []
-    if total <= 0 or not isinstance(data0, list):
+    if not isinstance(data0, list):
         raise RuntimeError(f"Unexpected response: recordsTotal={total}, data_type={type(data0)}")
 
+    if total == 0:
+        print("[info] recordsTotal=0 (no picks yet). Will output empty csv.", flush=True)
     pages = math.ceil(total / PAGE_SIZE)
     print(f"[info] recordsTotal={total}, pages={pages}", flush=True)
 
@@ -210,10 +212,10 @@ def main():
         })
 
     # Overwrite outputs
-    write_csv("picks_event134.csv", fields, full_rows)
+    write_csv(f"picks_event{EVENT_ID}.csv", fields, full_rows)
 
     day_rows = [r for r in full_rows if r.get("date_short") == target_date_short]
-    out_day = f"picks_event134_{tag}.csv"
+    out_day = f"picks_event{EVENT_ID}_{tag}.csv"
     write_csv(out_day, fields, day_rows)
 
     main_c = Counter()
@@ -238,7 +240,7 @@ def main():
     write_counter(f"player_count_{tag}_main.csv", main_items)
     write_counter(f"player_count_{tag}_alt.csv", alt_items)
 
-    print(f"OK: total records (all days) = {len(full_rows)} (recordsTotal={total}) -> picks_event134.csv (overwritten)")
+    print(f"OK: total records (all days) = {len(full_rows)} (recordsTotal={total}) -> picks_event{EVENT_ID}.csv (overwritten)")
     print(f"OK: {target_date_short} rows = {len(day_rows)} -> {out_day} (overwritten)")
     print(f"OK: {target_date_short} total users (unique user_id) = {len(user_ids)}")
     print(f"OK: wrote counts (overwritten) -> player_count_{tag}_main.csv / _alt.csv")
