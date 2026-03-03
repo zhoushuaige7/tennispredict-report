@@ -3,103 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Main Picks Count (player_count_0227_main.csv)</title>
+  <title>TennisPredict Report</title>
   <style>
     :root {
-      --bg: #0b1220;
-      --card: #0f1a33;
-      --text: #e7ecff;
-      --muted: #9fb0ff;
-      --border: rgba(255,255,255,.10);
-      --row: rgba(255,255,255,.04);
-      --row2: rgba(255,255,255,.02);
-      --accent: #7aa2ff;
+      --bg:#0b1220; --card:#0f1a33; --text:#e7ecff; --muted:#9fb0ff;
+      --border:rgba(255,255,255,.10); --row:rgba(255,255,255,.04); --row2:rgba(255,255,255,.02);
+      --accent:#7aa2ff;
     }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
       background: radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.25), transparent 55%),
                   radial-gradient(900px 500px at 100% 10%, rgba(133,255,201,.18), transparent 55%),
                   var(--bg);
-      color: var(--text);
+      color:var(--text);
     }
-    .wrap { max-width: 980px; margin: 40px auto; padding: 0 16px; }
-    .card {
+    .wrap{ max-width: 980px; margin:40px auto; padding:0 16px; }
+    .card{
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      border:1px solid var(--border); border-radius:18px;
       box-shadow: 0 10px 40px rgba(0,0,0,.35);
-      overflow: hidden;
+      overflow:hidden;
     }
-    header {
-      padding: 18px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(0,0,0,.15);
+    header{
+      padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+      border-bottom:1px solid var(--border); background: rgba(0,0,0,.15);
+      flex-wrap: wrap;
     }
-    h1 { margin: 0; font-size: 18px; letter-spacing: .2px; }
-    .meta { color: var(--muted); font-size: 12px; }
-    .tools { display:flex; gap:10px; align-items:center; }
-    input[type="search"] {
-      width: 280px; max-width: 45vw;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,.25);
-      color: var(--text);
-      outline: none;
+    h1{ margin:0; font-size:18px; letter-spacing:.2px; }
+    .meta{ color:var(--muted); font-size:12px; margin-top:6px; }
+    .tools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    select, input[type="search"]{
+      padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background: rgba(0,0,0,.25); color: var(--text); outline:none;
     }
-    input[type="search"]::placeholder { color: rgba(231,236,255,.55); }
-    .btn {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,.25);
-      color: var(--text);
-      cursor: pointer;
+    input[type="search"]{ width: 260px; max-width: 45vw; }
+    input[type="search"]::placeholder{ color: rgba(231,236,255,.55); }
+    .btn{
+      padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background: rgba(0,0,0,.25); color: var(--text); cursor:pointer;
     }
-    .btn:hover { border-color: rgba(122,162,255,.55); }
-    table { width: 100%; border-collapse: collapse; }
-    thead th {
-      position: sticky; top: 0;
-      background: rgba(10,18,32,.92);
-      backdrop-filter: blur(8px);
-      text-align: left;
-      font-size: 12px;
-      color: var(--muted);
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
+    .btn:hover{ border-color: rgba(122,162,255,.55); }
+    table{ width:100%; border-collapse: collapse; }
+    thead th{
+      position: sticky; top:0;
+      background: rgba(10,18,32,.92); backdrop-filter: blur(8px);
+      text-align:left; font-size:12px; color: var(--muted);
+      padding:12px 14px; border-bottom:1px solid var(--border);
+      cursor:pointer; user-select:none; white-space:nowrap;
     }
-    tbody td {
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      font-size: 14px;
+    tbody td{
+      padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.06); font-size:14px;
     }
-    tbody tr:nth-child(odd) { background: var(--row); }
-    tbody tr:nth-child(even) { background: var(--row2); }
-    tbody tr:hover { outline: 1px solid rgba(122,162,255,.35); }
-    .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .pill {
+    tbody tr:nth-child(odd){ background: var(--row); }
+    tbody tr:nth-child(even){ background: var(--row2); }
+    tbody tr:hover{ outline: 1px solid rgba(122,162,255,.35); }
+    .num{ text-align:right; font-variant-numeric: tabular-nums; }
+    .pill{
       display:inline-block; padding: 2px 8px; border-radius: 999px;
-      border: 1px solid rgba(122,162,255,.35);
-      background: rgba(122,162,255,.12);
-      color: var(--text);
-      font-size: 12px;
-      margin-left: 8px;
+      border:1px solid rgba(122,162,255,.35); background: rgba(122,162,255,.12);
+      color: var(--text); font-size:12px; margin-left:8px;
     }
-    .foot {
-      padding: 12px 16px;
-      color: rgba(231,236,255,.7);
-      font-size: 12px;
-    }
-    .hint { color: rgba(231,236,255,.65); }
-    .sort { color: var(--accent); margin-left: 6px; }
+    .foot{ padding:12px 16px; color: rgba(231,236,255,.7); font-size: 12px; }
+    .sort{ color: var(--accent); margin-left: 6px; }
+    .err{ color:#ffb3b3; font-size:12px; margin-top:6px; white-space:pre-wrap; }
   </style>
 </head>
 <body>
@@ -107,10 +73,18 @@
     <div class="card">
       <header>
         <div>
-          <h1>Main Picks Count (player_count_0227_main.csv)<span class="pill" id="countPill"></span></h1>
-          <div class="meta">点击表头排序 · 搜索框实时过滤</div>
+          <h1>
+            Main Picks Count
+            <span class="pill" id="countPill"></span>
+          </h1>
+          <div class="meta">
+            日期下拉选择 · 点击表头排序 · 搜索框实时过滤
+            <div class="err" id="errBox"></div>
+          </div>
         </div>
         <div class="tools">
+          <label style="font-size:12px;color:var(--muted);">日期</label>
+          <select id="dateSel"></select>
           <input id="q" type="search" placeholder="搜索 player…" />
           <button class="btn" id="reset">重置</button>
         </div>
@@ -127,94 +101,150 @@
       </table>
 
       <div class="foot">
-        <span class="hint">提示：</span>默认按 count 降序展示；你可以点击表头切换升/降序。
+        CSV 来源：<code>/data/player_count_&lt;MMDD&gt;_main.csv</code>
       </div>
     </div>
   </div>
 
-  <script>
-    const data = [{"player": "凯茨曼诺维奇", "count": 39}, {"player": "中岛布兰登", "count": 20}, {"player": "科博利", "count": 17}, {"player": "蒂亚福", "count": 8}];
+<script>
+  const sel = document.querySelector("#dateSel");
+  const tbody = document.querySelector("#tbl tbody");
+  const q = document.querySelector("#q");
+  const resetBtn = document.querySelector("#reset");
+  const pill = document.querySelector("#countPill");
+  const errBox = document.querySelector("#errBox");
 
-    const tbody = document.querySelector("#tbl tbody");
-    const q = document.querySelector("#q");
-    const resetBtn = document.querySelector("#reset");
-    const pill = document.querySelector("#countPill");
+  let rawRows = [];
+  let sortKey = "count";
+  let sortDir = "desc";
 
-    let sortKey = "count";
-    let sortDir = "desc";
+  function setErr(msg){
+    errBox.textContent = msg ? String(msg) : "";
+  }
 
-    function render(rows) {
-      tbody.innerHTML = "";
-      for (const r of rows) {
-        const tr = document.createElement("tr");
-        const td1 = document.createElement("td");
-        td1.textContent = r.player;
-        const td2 = document.createElement("td");
-        td2.textContent = r.count;
-        td2.className = "num";
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        tbody.appendChild(tr);
-      }
-      pill.textContent = `${rows.length} rows`;
+  function parseCSV(text){
+    // Simple CSV parser for: player,count (utf-8-sig supported)
+    const t = text.replace(/^\uFEFF/, ""); // strip BOM
+    const lines = t.split(/\r?\n/).filter(x => x.trim().length > 0);
+    if (lines.length <= 1) return [];
+    const out = [];
+    for (let i=1;i<lines.length;i++){
+      const line = lines[i];
+      // handle simple csv without quoted commas (your file fits)
+      const parts = line.split(",");
+      const player = (parts[0] || "").trim();
+      const count = Number((parts[1] || "").trim());
+      if (player) out.push({player, count: isFinite(count) ? count : 0});
     }
+    return out;
+  }
 
-    function applySort(rows) {
-      const s = [...rows];
-      s.sort((a,b) => {
-        let va = a[sortKey], vb = b[sortKey];
-        if (sortKey === "count") {
-          va = Number(va); vb = Number(vb);
-        }
-        if (va < vb) return sortDir === "asc" ? -1 : 1;
-        if (va > vb) return sortDir === "asc" ? 1 : -1;
-        return (a.player || "").localeCompare(b.player || "");
-      });
-      return s;
+  function render(rows){
+    tbody.innerHTML = "";
+    for (const r of rows){
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      td1.textContent = r.player;
+      const td2 = document.createElement("td");
+      td2.textContent = r.count;
+      td2.className = "num";
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbody.appendChild(tr);
     }
+    pill.textContent = `${rows.length} rows`;
+  }
 
-    function applyFilter(rows) {
-      const kw = q.value.trim().toLowerCase();
-      if (!kw) return rows;
-      return rows.filter(r => (r.player || "").toLowerCase().includes(kw));
-    }
+  function applyFilter(rows){
+    const kw = q.value.trim().toLowerCase();
+    if (!kw) return rows;
+    return rows.filter(r => (r.player || "").toLowerCase().includes(kw));
+  }
 
-    function updateSortIndicators() {
-      document.querySelector("#s_player").textContent = "";
-      document.querySelector("#s_count").textContent = "";
-      const el = document.querySelector(`#s_${sortKey}`);
-      el.textContent = sortDir === "asc" ? "▲" : "▼";
-    }
-
-    function refresh() {
-      const filtered = applyFilter(data);
-      const sorted = applySort(filtered);
-      updateSortIndicators();
-      render(sorted);
-    }
-
-    document.querySelectorAll("thead th[data-k]").forEach(th => {
-      th.addEventListener("click", () => {
-        const k = th.dataset.k;
-        if (sortKey === k) {
-          sortDir = (sortDir === "asc") ? "desc" : "asc";
-        } else {
-          sortKey = k;
-          sortDir = (k === "count") ? "desc" : "asc";
-        }
-        refresh();
-      });
+  function applySort(rows){
+    const s = [...rows];
+    s.sort((a,b) => {
+      let va = a[sortKey], vb = b[sortKey];
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return (a.player || "").localeCompare(b.player || "");
     });
+    return s;
+  }
 
-    q.addEventListener("input", refresh);
-    resetBtn.addEventListener("click", () => {
-      q.value = "";
-      sortKey = "count";
-      sortDir = "desc";
+  function updateSortIndicators(){
+    document.querySelector("#s_player").textContent = "";
+    document.querySelector("#s_count").textContent = "";
+    const el = document.querySelector(`#s_${sortKey}`);
+    el.textContent = sortDir === "asc" ? "▲" : "▼";
+  }
+
+  function refresh(){
+    const filtered = applyFilter(rawRows);
+    const sorted = applySort(filtered);
+    updateSortIndicators();
+    render(sorted);
+  }
+
+  async function loadForDate(mmdd){
+    setErr("");
+    const url = `data/player_count_${mmdd}_main.csv?cb=${Date.now()}`;
+    try{
+      const r = await fetch(url, {cache: "no-store"});
+      if (!r.ok) throw new Error(`fetch ${url} failed: ${r.status}`);
+      const text = await r.text();
+      rawRows = parseCSV(text);
+      refresh();
+    }catch(e){
+      rawRows = [];
+      refresh();
+      setErr(e);
+    }
+  }
+
+  async function initDates(){
+    const url = `data/manifest.json?cb=${Date.now()}`;
+    const r = await fetch(url, {cache: "no-store"});
+    if (!r.ok) throw new Error(`fetch manifest failed: ${r.status}`);
+    const j = await r.json();
+    const dates = (j.dates || []);
+    const latest = j.latest || (dates.length ? dates[dates.length-1] : "");
+    sel.innerHTML = "";
+    for (const d of dates){
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      sel.appendChild(opt);
+    }
+    if (latest) sel.value = latest;
+    await loadForDate(sel.value);
+  }
+
+  // events
+  document.querySelectorAll("thead th[data-k]").forEach(th => {
+    th.addEventListener("click", () => {
+      const k = th.dataset.k;
+      if (sortKey === k){
+        sortDir = (sortDir === "asc") ? "desc" : "asc";
+      }else{
+        sortKey = k;
+        sortDir = (k === "count") ? "desc" : "asc";
+      }
       refresh();
     });
+  });
 
+  sel.addEventListener("change", () => loadForDate(sel.value));
+  q.addEventListener("input", refresh);
+  resetBtn.addEventListener("click", () => {
+    q.value = "";
+    sortKey = "count";
+    sortDir = "desc";
     refresh();
-  </script>
+  });
+
+  // boot
+  initDates().catch(e => setErr(e));
+</script>
 </body>
 </html>
