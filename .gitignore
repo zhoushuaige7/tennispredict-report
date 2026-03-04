@@ -14,3 +14,5 @@ page.html
 # allow published csv under docs/data
 !docs/data/*.csv
 !docs/data/**/*.csv
+*.swp
+*.swo
