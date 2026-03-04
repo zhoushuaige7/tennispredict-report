@@ -188,7 +188,7 @@
 
   async function loadForDate(mmdd){
     setErr("");
-    const url = `data/player_count_${mmdd}_main.csv?cb=${Date.now()}`;
+    const url = `./data/player_count_${mmdd}_main.csv?cb=${Date.now()}`;
     try{
       const r = await fetch(url, {cache: "no-store"});
       if (!r.ok) throw new Error(`fetch ${url} failed: ${r.status}`);
