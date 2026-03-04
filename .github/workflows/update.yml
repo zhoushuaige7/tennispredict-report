@@ -3,6 +3,7 @@ name: refresh tennispredict data
 on:
   workflow_dispatch: {}
   schedule:
+    # every 10 minutes
     - cron: "*/10 * * * *"
 
 permissions:
@@ -41,8 +42,12 @@ jobs:
           python - <<'PY'
           import json, time, os
           p = os.path.join("docs","data","latest.json")
-          with open(p, "r", encoding="utf-8") as f:
-            j = json.load(f)
+          os.makedirs(os.path.dirname(p), exist_ok=True)
+          try:
+            with open(p, "r", encoding="utf-8") as f:
+              j = json.load(f)
+          except Exception:
+            j = {}
           j["heartbeat"] = int(time.time())
           with open(p, "w", encoding="utf-8") as f:
             json.dump(j, f, ensure_ascii=False, indent=2)
@@ -54,9 +59,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/data
-          if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Auto update docs/data"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          git commit -m "Auto update docs/data" || true
+          git push
