@@ -25,10 +25,17 @@ except Exception:
 
 # ===== Fixed config =====
 YEAR = 2026
-EVENT_ID = 30609
-REFERER = "https://www.live-tennis.cn/zh/survivor/event/30609/2026/WS/detail"
-API = f"https://www.live-tennis.cn/zh/survivor/event/{EVENT_ID}/{YEAR}/detail"
+
+# 这是你正在看的页面（用于拿 csrf / cookie）
+PAGE_EVENT_ID = 30609
+REFERER = f"https://www.live-tennis.cn/zh/survivor/event/{PAGE_EVENT_ID}/{YEAR}/WS/detail"
+
+# 这是表格数据接口用的 event id（从你贴的网页源码里看到是 135）
+API_EVENT_ID = 135
+API = f"https://www.live-tennis.cn/zh/survivor/event/{API_EVENT_ID}/{YEAR}/detail"
+
 UA = "Mozilla/5.0"
+# =======================
 
 PAGE_SIZE = 200     # if unstable, set to 100
 PAGE_SLEEP = 0.2    # small delay to reduce rate-limit risk
@@ -249,10 +256,10 @@ def main():
         })
 
     # Overwrite outputs
-    write_csv(f"picks_event{EVENT_ID}.csv", fields, full_rows)
+    write_csv(f"picks_event{API_EVENT_ID}.csv", fields, full_rows)
 
     day_rows = [r for r in full_rows if r.get("date_short") == target_date_short]
-    out_day = f"picks_event{EVENT_ID}_{tag}.csv"
+    out_day = f"picks_event{API_EVENT_ID}_{tag}.csv"
     write_csv(out_day, fields, day_rows)
 
     main_c = Counter()
@@ -277,7 +284,7 @@ def main():
     write_counter(f"player_count_{tag}_main.csv", main_items)
     write_counter(f"player_count_{tag}_alt.csv", alt_items)
 
-    print(f"OK: total records (all days) = {len(full_rows)} (recordsTotal={total}) -> picks_event{EVENT_ID}.csv (overwritten)")
+    print(f"OK: total records (all days) = {len(full_rows)} (recordsTotal={total}) -> picks_event{API_EVENT_ID}.csv (overwritten)")
     print(f"OK: {target_date_short} rows = {len(day_rows)} -> {out_day} (overwritten)")
     print(f"OK: {target_date_short} total users (unique user_id) = {len(user_ids)}")
     print(f"OK: wrote counts (overwritten) -> player_count_{tag}_main.csv / _alt.csv")
