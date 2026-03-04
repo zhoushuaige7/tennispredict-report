@@ -16,3 +16,4 @@ page.html
 !docs/data/**/*.csv
 *.swp
 *.swo
+picks_event*.csv
