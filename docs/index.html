@@ -66,6 +66,8 @@
     .foot{ padding:12px 16px; color: rgba(231,236,255,.7); font-size: 12px; }
     .sort{ color: var(--accent); margin-left: 6px; }
     .err{ color:#ffb3b3; font-size:12px; margin-top:6px; white-space:pre-wrap; }
+    .statusline{ color: rgba(231,236,255,.7); font-size: 12px; margin-top: 6px; }
+    code{ color: rgba(231,236,255,.85); }
   </style>
 </head>
 <body>
@@ -79,6 +81,7 @@
           </h1>
           <div class="meta">
             日期下拉选择 · 点击表头排序 · 搜索框实时过滤
+            <div class="statusline" id="statusLine"></div>
             <div class="err" id="errBox"></div>
           </div>
         </div>
@@ -101,7 +104,7 @@
       </table>
 
       <div class="foot">
-        CSV 来源：<code>/data/player_count_&lt;MMDD&gt;_main.csv</code>
+        CSV 来源：<code>/data/player_count_&lt;MMDD&gt;_main.csv</code> · 自动刷新：<code>/data/latest.json</code>
       </div>
     </div>
   </div>
@@ -113,13 +116,22 @@
   const resetBtn = document.querySelector("#reset");
   const pill = document.querySelector("#countPill");
   const errBox = document.querySelector("#errBox");
+  const statusLine = document.querySelector("#statusLine");
 
   let rawRows = [];
   let sortKey = "count";
   let sortDir = "desc";
 
+  // hybrid mode state
+  let currentVersion = null;
+  let lastUpdatedAt = null;
+  const POLL_MS = 30000; // 30s
+
   function setErr(msg){
     errBox.textContent = msg ? String(msg) : "";
+  }
+  function setStatus(msg){
+    statusLine.textContent = msg ? String(msg) : "";
   }
 
   function parseCSV(text){
@@ -130,7 +142,7 @@
     const out = [];
     for (let i=1;i<lines.length;i++){
       const line = lines[i];
-      // handle simple csv without quoted commas (your file fits)
+      // your csv is simple: no quoted commas
       const parts = line.split(",");
       const player = (parts[0] || "").trim();
       const count = Number((parts[1] || "").trim());
@@ -202,13 +214,17 @@
     }
   }
 
-  async function initDates(){
-    const url = `data/manifest.json?cb=${Date.now()}`;
+  async function initDates(preferDate=null){
+    const url = `./data/manifest.json?cb=${Date.now()}`;
     const r = await fetch(url, {cache: "no-store"});
     if (!r.ok) throw new Error(`fetch manifest failed: ${r.status}`);
     const j = await r.json();
+
     const dates = (j.dates || []);
     const latest = j.latest || (dates.length ? dates[dates.length-1] : "");
+
+    // rebuild options
+    const prev = preferDate || sel.value || latest;
     sel.innerHTML = "";
     for (const d of dates){
       const opt = document.createElement("option");
@@ -216,8 +232,52 @@
       opt.textContent = d;
       sel.appendChild(opt);
     }
-    if (latest) sel.value = latest;
-    await loadForDate(sel.value);
+
+    // choose
+    let chosen = latest;
+    if (prev && dates.includes(prev)) chosen = prev;
+    if (!chosen && dates.length) chosen = dates[dates.length-1];
+
+    if (chosen) sel.value = chosen;
+    if (chosen) await loadForDate(chosen);
+  }
+
+  async function pollLatest(){
+    try{
+      const url = `./data/latest.json?cb=${Date.now()}`;
+      const r = await fetch(url, {cache:"no-store"});
+      if (!r.ok) throw new Error(`fetch latest failed: ${r.status}`);
+      const j = await r.json();
+
+      const v = j.version || "";
+      const latest = j.latest || "";
+      const updatedAt = j.updated_at || "";
+
+      // update status line always
+      if (updatedAt){
+        setStatus(`最新更新：${updatedAt}（version=${v}）`);
+      }else{
+        setStatus(v ? `version=${v}` : "");
+      }
+
+      if (currentVersion === null){
+        currentVersion = v;
+        lastUpdatedAt = updatedAt;
+        return;
+      }
+
+      // Only refresh when version changes
+      if (v && v !== currentVersion){
+        currentVersion = v;
+        lastUpdatedAt = updatedAt;
+
+        // reload manifest and force latest if provided
+        await initDates(latest || null);
+      }
+    }catch(e){
+      // keep running even if temporary failures; show latest error only
+      setErr(e);
+    }
   }
 
   // events
@@ -244,7 +304,15 @@
   });
 
   // boot
-  initDates().catch(e => setErr(e));
+  (async () => {
+    try{
+      await initDates();
+      await pollLatest();            // initialize currentVersion + status line
+      setInterval(pollLatest, POLL_MS);
+    }catch(e){
+      setErr(e);
+    }
+  })();
 </script>
 </body>
 </html>
