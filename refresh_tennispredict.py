@@ -42,23 +42,60 @@ MAX_PAGE_ATTEMPTS = 5
 def ask_mmdd_or_argv() -> tuple[str, str]:
     """
     Returns:
-      tag='0227', date_short='02/27'
-    Supports argv: python script.py 0227
+      tag='0304', date_short='03/04'
+
+    Priority:
+      1) Env MMDD=0304
+      2) argv: python script.py 0304
+      3) auto today in Asia/Shanghai (Beijing time)
+
+    Guard:
+      If today < START_MMDD (env) then use START_MMDD.
+      Default START_MMDD=0304 (you can change per tournament).
     """
-    if len(sys.argv) >= 2 and re.fullmatch(r"\d{4}", sys.argv[1].strip()):
-        s = sys.argv[1].strip()
+    import os
+    from datetime import datetime
+    try:
+        from zoneinfo import ZoneInfo  # py3.9+
+        tz = ZoneInfo(os.getenv("TZ_NAME", "Asia/Shanghai"))
+        now = datetime.now(tz)
+    except Exception:
+        # fallback (local time)
+        now = datetime.now()
+
+    start_mmdd = os.getenv("START_MMDD", "0304").strip()
+
+    def norm_mmdd(s: str) -> str | None:
+        s = (s or "").strip()
+        if not re.fullmatch(r"\d{4}", s):
+            return None
         mm, dd = s[:2], s[2:]
-        return s, f"{mm}/{dd}"
+        m_int, d_int = int(mm), int(dd)
+        if 1 <= m_int <= 12 and 1 <= d_int <= 31:
+            return s
+        return None
 
-    while True:
-        s = input("Enter date MMDD (e.g. 0227 for Feb 27): ").strip()
-        if re.fullmatch(r"\d{4}", s):
-            mm, dd = s[:2], s[2:]
-            m_int, d_int = int(mm), int(dd)
-            if 1 <= m_int <= 12 and 1 <= d_int <= 31:
-                return s, f"{mm}/{dd}"
-        print("Invalid input. Please enter 4 digits MMDD, e.g. 0227, 0301.")
+    # 1) env
+    env_mmdd = norm_mmdd(os.getenv("MMDD", ""))
+    if env_mmdd:
+        mm, dd = env_mmdd[:2], env_mmdd[2:]
+        return env_mmdd, f"{mm}/{dd}"
 
+    # 2) argv
+    if len(sys.argv) >= 2:
+        arg_mmdd = norm_mmdd(sys.argv[1])
+        if arg_mmdd:
+            mm, dd = arg_mmdd[:2], arg_mmdd[2:]
+            return arg_mmdd, f"{mm}/{dd}"
+
+    # 3) auto today
+    today_mmdd = now.strftime("%m%d")
+    # guard: before tournament start, pin to start date
+    if norm_mmdd(start_mmdd) and today_mmdd < start_mmdd:
+        today_mmdd = start_mmdd
+
+    mm, dd = today_mmdd[:2], today_mmdd[2:]
+    return today_mmdd, f"{mm}/{dd}"
 
 def make_session() -> requests.Session:
     s = requests.Session()
@@ -285,7 +322,7 @@ def main():
 
     print(f"[publish] wrote {dst_main}, {dst_alt}", flush=True)
     print(f"[publish] updated docs/data/manifest.json and latest.json (latest={latest}, version={version})", flush=True)
-    
+
 if __name__ == "__main__":
     try:
         main()
