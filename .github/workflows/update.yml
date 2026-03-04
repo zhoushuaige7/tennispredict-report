@@ -36,13 +36,26 @@ jobs:
         run: |
           python -u refresh_tennispredict.py
 
-      - name: Commit & push if changed
+      - name: Heartbeat latest.json (always update)
+        run: |
+          python - <<'PY'
+          import json, time, os
+          p = os.path.join("docs","data","latest.json")
+          with open(p, "r", encoding="utf-8") as f:
+            j = json.load(f)
+          j["heartbeat"] = int(time.time())
+          with open(p, "w", encoding="utf-8") as f:
+            json.dump(j, f, ensure_ascii=False, indent=2)
+          print("heartbeat updated:", j["heartbeat"])
+          PY
+
+      - name: Commit & push (always)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/latest.json docs/data/manifest.json 2>/dev/null || true
           if [ -n "$(git status --porcelain)" ]; then
-            git add -A
-            git commit -m "Auto update data (docs/data)"
+            git commit -m "Auto heartbeat (latest.json)"
             git push
           else
             echo "No changes to commit."
