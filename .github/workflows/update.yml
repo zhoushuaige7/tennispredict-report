@@ -36,6 +36,7 @@ jobs:
           TZ_NAME: "Asia/Shanghai"
         run: |
           python -u refresh_tennispredict.py
+          python -u refresh_tennispredict_ms.py
 
       - name: Heartbeat latest.json (always update)
         run: |
