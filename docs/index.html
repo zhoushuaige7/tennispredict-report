@@ -5,64 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TennisPredict Report</title>
   <style>
-    :root {
-      --bg:#0b1220; --card:#0f1a33; --text:#e7ecff; --muted:#9fb0ff;
-      --border:rgba(255,255,255,.10); --row:rgba(255,255,255,.04); --row2:rgba(255,255,255,.02);
-      --accent:#7aa2ff;
-    }
-    body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    :root { --bg:#0b1220; --card:#0f1a33; --text:#e7ecff; --muted:#9fb0ff; --border:rgba(255,255,255,.10); --row:rgba(255,255,255,.04); --row2:rgba(255,255,255,.02); --accent:#7aa2ff; }
+    body{ margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
       background: radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.25), transparent 55%),
-                  radial-gradient(900px 500px at 100% 10%, rgba(133,255,201,.18), transparent 55%),
-                  var(--bg);
-      color:var(--text);
-    }
+                  radial-gradient(900px 500px at 100% 10%, rgba(133,255,201,.18), transparent 55%), var(--bg);
+      color:var(--text); }
     .wrap{ max-width: 980px; margin:40px auto; padding:0 16px; }
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border:1px solid var(--border); border-radius:18px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.35);
-      overflow:hidden;
-    }
-    header{
-      padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px;
-      border-bottom:1px solid var(--border); background: rgba(0,0,0,.15);
-      flex-wrap: wrap;
-    }
+    .card{ background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border:1px solid var(--border); border-radius:18px; box-shadow: 0 10px 40px rgba(0,0,0,.35); overflow:hidden; }
+    header{ padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--border); background: rgba(0,0,0,.15); flex-wrap: wrap; }
     h1{ margin:0; font-size:18px; letter-spacing:.2px; }
     .meta{ color:var(--muted); font-size:12px; margin-top:6px; }
     .tools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    select, input[type="search"]{
-      padding:10px 12px; border-radius:12px; border:1px solid var(--border);
-      background: rgba(0,0,0,.25); color: var(--text); outline:none;
-    }
+    select, input[type="search"]{ padding:10px 12px; border-radius:12px; border:1px solid var(--border); background: rgba(0,0,0,.25); color: var(--text); outline:none; }
     input[type="search"]{ width: 260px; max-width: 45vw; }
     input[type="search"]::placeholder{ color: rgba(231,236,255,.55); }
-    .btn{
-      padding:10px 12px; border-radius:12px; border:1px solid var(--border);
-      background: rgba(0,0,0,.25); color: var(--text); cursor:pointer;
-    }
+    .btn{ padding:10px 12px; border-radius:12px; border:1px solid var(--border); background: rgba(0,0,0,.25); color: var(--text); cursor:pointer; }
     .btn:hover{ border-color: rgba(122,162,255,.55); }
     table{ width:100%; border-collapse: collapse; }
-    thead th{
-      position: sticky; top:0;
-      background: rgba(10,18,32,.92); backdrop-filter: blur(8px);
-      text-align:left; font-size:12px; color: var(--muted);
-      padding:12px 14px; border-bottom:1px solid var(--border);
-      cursor:pointer; user-select:none; white-space:nowrap;
-    }
-    tbody td{
-      padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.06); font-size:14px;
-    }
+    thead th{ position: sticky; top:0; background: rgba(10,18,32,.92); backdrop-filter: blur(8px); text-align:left; font-size:12px; color: var(--muted);
+      padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; white-space:nowrap; }
+    tbody td{ padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.06); font-size:14px; }
     tbody tr:nth-child(odd){ background: var(--row); }
     tbody tr:nth-child(even){ background: var(--row2); }
-    tbody tr:hover{ outline: 1px solid rgba(122,162,255,.35); }
     .num{ text-align:right; font-variant-numeric: tabular-nums; }
-    .pill{
-      display:inline-block; padding: 2px 8px; border-radius: 999px;
-      border:1px solid rgba(122,162,255,.35); background: rgba(122,162,255,.12);
-      color: var(--text); font-size:12px; margin-left:8px;
-    }
+    .pill{ display:inline-block; padding: 2px 8px; border-radius: 999px; border:1px solid rgba(122,162,255,.35); background: rgba(122,162,255,.12);
+      color: var(--text); font-size:12px; margin-left:8px; }
     .foot{ padding:12px 16px; color: rgba(231,236,255,.7); font-size: 12px; }
     .sort{ color: var(--accent); margin-left: 6px; }
     .err{ color:#ffb3b3; font-size:12px; margin-top:6px; white-space:pre-wrap; }
@@ -76,18 +43,25 @@
       <header>
         <div>
           <h1>
-            Main Picks Count
+            Picks Count
             <span class="pill" id="countPill"></span>
           </h1>
           <div class="meta">
-            日期下拉选择 · 点击表头排序 · 搜索框实时过滤
+            选择 WS/MS · 日期下拉 · 点击表头排序 · 搜索过滤
             <div class="statusline" id="statusLine"></div>
             <div class="err" id="errBox"></div>
           </div>
         </div>
         <div class="tools">
+          <label style="font-size:12px;color:var(--muted);">项目</label>
+          <select id="modeSel">
+            <option value="ws" selected>WS</option>
+            <option value="ms">MS</option>
+          </select>
+
           <label style="font-size:12px;color:var(--muted);">日期</label>
           <select id="dateSel"></select>
+
           <input id="q" type="search" placeholder="搜索 player…" />
           <button class="btn" id="reset">重置</button>
         </div>
@@ -104,12 +78,13 @@
       </table>
 
       <div class="foot">
-        CSV 来源：<code>/data/player_count_&lt;MMDD&gt;_main.csv</code> · 自动刷新：<code>/data/latest.json</code>
+        数据目录：<code>/data/</code>（WS: manifest.json + player_count_*.csv；MS: ms_manifest.json + ms_player_count_*.csv）
       </div>
     </div>
   </div>
 
 <script>
+  const modeSel = document.querySelector("#modeSel");
   const sel = document.querySelector("#dateSel");
   const tbody = document.querySelector("#tbl tbody");
   const q = document.querySelector("#q");
@@ -122,28 +97,36 @@
   let sortKey = "count";
   let sortDir = "desc";
 
-  // hybrid mode state
-  let currentVersion = null;
-  let lastUpdatedAt = null;
-  const POLL_MS = 30000; // 30s
+  // auto refresh state
+  let currentSig = null;
+  const POLL_MS = 30000;
 
-  function setErr(msg){
-    errBox.textContent = msg ? String(msg) : "";
-  }
-  function setStatus(msg){
-    statusLine.textContent = msg ? String(msg) : "";
+  function setErr(msg){ errBox.textContent = msg ? String(msg) : ""; }
+  function setStatus(msg){ statusLine.textContent = msg ? String(msg) : ""; }
+
+  function paths(){
+    const mode = modeSel.value; // ws | ms
+    if (mode === "ms"){
+      return {
+        manifest: "./data/ms_manifest.json",
+        latest: "./data/ms_latest.json",
+        csv: (mmdd) => `./data/ms_player_count_${mmdd}_main.csv`,
+      };
+    }
+    return {
+      manifest: "./data/manifest.json",
+      latest: "./data/latest.json",
+      csv: (mmdd) => `./data/player_count_${mmdd}_main.csv`,
+    };
   }
 
   function parseCSV(text){
-    // Simple CSV parser for: player,count (utf-8-sig supported)
-    const t = text.replace(/^\uFEFF/, ""); // strip BOM
+    const t = text.replace(/^\uFEFF/, "");
     const lines = t.split(/\r?\n/).filter(x => x.trim().length > 0);
     if (lines.length <= 1) return [];
     const out = [];
     for (let i=1;i<lines.length;i++){
-      const line = lines[i];
-      // your csv is simple: no quoted commas
-      const parts = line.split(",");
+      const parts = lines[i].split(",");
       const player = (parts[0] || "").trim();
       const count = Number((parts[1] || "").trim());
       if (player) out.push({player, count: isFinite(count) ? count : 0});
@@ -155,13 +138,9 @@
     tbody.innerHTML = "";
     for (const r of rows){
       const tr = document.createElement("tr");
-      const td1 = document.createElement("td");
-      td1.textContent = r.player;
-      const td2 = document.createElement("td");
-      td2.textContent = r.count;
-      td2.className = "num";
-      tr.appendChild(td1);
-      tr.appendChild(td2);
+      const td1 = document.createElement("td"); td1.textContent = r.player;
+      const td2 = document.createElement("td"); td2.textContent = r.count; td2.className = "num";
+      tr.appendChild(td1); tr.appendChild(td2);
       tbody.appendChild(tr);
     }
     pill.textContent = `${rows.length} rows`;
@@ -187,8 +166,7 @@
   function updateSortIndicators(){
     document.querySelector("#s_player").textContent = "";
     document.querySelector("#s_count").textContent = "";
-    const el = document.querySelector(`#s_${sortKey}`);
-    el.textContent = sortDir === "asc" ? "▲" : "▼";
+    document.querySelector(`#s_${sortKey}`).textContent = (sortDir === "asc") ? "▲" : "▼";
   }
 
   function refresh(){
@@ -200,82 +178,58 @@
 
   async function loadForDate(mmdd){
     setErr("");
-    const url = `./data/player_count_${mmdd}_main.csv?cb=${Date.now()}`;
-    try{
-      const r = await fetch(url, {cache: "no-store"});
-      if (!r.ok) throw new Error(`fetch ${url} failed: ${r.status}`);
-      const text = await r.text();
-      rawRows = parseCSV(text);
-      refresh();
-    }catch(e){
-      rawRows = [];
-      refresh();
-      setErr(e);
-    }
+    const p = paths();
+    const url = `${p.csv(mmdd)}?cb=${Date.now()}`;
+    const r = await fetch(url, {cache:"no-store"});
+    if (!r.ok) throw new Error(`fetch csv failed: ${r.status} (${url})`);
+    rawRows = parseCSV(await r.text());
+    refresh();
   }
 
-  async function initDates(preferDate=null){
-    const url = `./data/manifest.json?cb=${Date.now()}`;
-    const r = await fetch(url, {cache: "no-store"});
-    if (!r.ok) throw new Error(`fetch manifest failed: ${r.status}`);
+  async function initDates(prefer=null){
+    const p = paths();
+    const url = `${p.manifest}?cb=${Date.now()}`;
+    const r = await fetch(url, {cache:"no-store"});
+    if (!r.ok) throw new Error(`fetch manifest failed: ${r.status} (${url})`);
     const j = await r.json();
 
-    const dates = (j.dates || []);
+    const dates = j.dates || [];
     const latest = j.latest || (dates.length ? dates[dates.length-1] : "");
+    const prev = prefer || sel.value || latest;
 
-    // rebuild options
-    const prev = preferDate || sel.value || latest;
     sel.innerHTML = "";
     for (const d of dates){
       const opt = document.createElement("option");
-      opt.value = d;
-      opt.textContent = d;
+      opt.value = d; opt.textContent = d;
       sel.appendChild(opt);
     }
 
-    // choose
     let chosen = latest;
     if (prev && dates.includes(prev)) chosen = prev;
-    if (!chosen && dates.length) chosen = dates[dates.length-1];
-
     if (chosen) sel.value = chosen;
     if (chosen) await loadForDate(chosen);
   }
 
   async function pollLatest(){
     try{
-      const url = `./data/latest.json?cb=${Date.now()}`;
+      const p = paths();
+      const url = `${p.latest}?cb=${Date.now()}`;
       const r = await fetch(url, {cache:"no-store"});
-      if (!r.ok) throw new Error(`fetch latest failed: ${r.status}`);
+      if (!r.ok) throw new Error(`fetch latest failed: ${r.status} (${url})`);
       const j = await r.json();
 
-      const v = j.version || "";
-      const latest = j.latest || "";
-      const updatedAt = j.updated_at || "";
+      const sig = `${j.version || ""}-${j.heartbeat || ""}-${j.updated_at || ""}`;
+      setStatus(`${modeSel.value.toUpperCase()} 最新更新：${j.updated_at || ""} (version=${j.version || ""})`);
 
-      // update status line always
-      if (updatedAt){
-        setStatus(`最新更新：${updatedAt}（version=${v}）`);
-      }else{
-        setStatus(v ? `version=${v}` : "");
-      }
-
-      if (currentVersion === null){
-        currentVersion = v;
-        lastUpdatedAt = updatedAt;
+      if (currentSig === null){
+        currentSig = sig;
         return;
       }
-
-      // Only refresh when version changes
-      if (v && v !== currentVersion){
-        currentVersion = v;
-        lastUpdatedAt = updatedAt;
-
-        // reload manifest and force latest if provided
-        await initDates(latest || null);
+      if (sig !== currentSig){
+        currentSig = sig;
+        await initDates(sel.value || null);
       }
     }catch(e){
-      // keep running even if temporary failures; show latest error only
       setErr(e);
     }
   }
@@ -284,34 +238,30 @@
   document.querySelectorAll("thead th[data-k]").forEach(th => {
     th.addEventListener("click", () => {
       const k = th.dataset.k;
-      if (sortKey === k){
-        sortDir = (sortDir === "asc") ? "desc" : "asc";
-      }else{
-        sortKey = k;
-        sortDir = (k === "count") ? "desc" : "asc";
-      }
+      if (sortKey === k) sortDir = (sortDir === "asc") ? "desc" : "asc";
+      else { sortKey = k; sortDir = (k === "count") ? "desc" : "asc"; }
       refresh();
     });
   });
 
   sel.addEventListener("change", () => loadForDate(sel.value));
   q.addEventListener("input", refresh);
-  resetBtn.addEventListener("click", () => {
-    q.value = "";
-    sortKey = "count";
-    sortDir = "desc";
-    refresh();
+  resetBtn.addEventListener("click", () => { q.value=""; sortKey="count"; sortDir="desc"; refresh(); });
+
+  modeSel.addEventListener("change", async () => {
+    // reset signature so it refreshes immediately for new mode
+    currentSig = null;
+    await initDates();
+    await pollLatest();
   });
 
   // boot
   (async () => {
     try{
       await initDates();
-      await pollLatest();            // initialize currentVersion + status line
+      await pollLatest();
       setInterval(pollLatest, POLL_MS);
-    }catch(e){
-      setErr(e);
-    }
+    }catch(e){ setErr(e); }
   })();
 </script>
 </body>
