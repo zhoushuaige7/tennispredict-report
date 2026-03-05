@@ -1,49 +1,53 @@
-# refresh_tennispredict_requests.py
+# refresh_tennispredict.py
 # requests-driven + retry + progress + MMDD input/argv
 #
+# Key behavior (WS):
+# - Fetch ALL records from API
+# - Group by date_short (e.g. "03/04") and write player_count_MMDD_*.csv for EVERY date in dataset
+# - Publish ALL generated player_count_*.csv to docs/data and update manifest.json/latest.json
+#
 # Run:
-#   python refresh_tennispredict_requests.py
-#   (or) python refresh_tennispredict_requests.py 0227
+#   winpty python -u refresh_tennispredict.py
+#   START_MMDD=0304 winpty python -u refresh_tennispredict.py
+#   MMDD=0304 winpty python -u refresh_tennispredict.py   (forces target_date_short for out_day only)
 
 import csv
 import math
 import re
 import sys
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from urllib.parse import unquote
 
 import requests
 from requests.adapters import HTTPAdapter
 
 try:
-    # urllib3 is installed along with requests
     from urllib3.util.retry import Retry
 except Exception:
     Retry = None
 
 
-# ===== Fixed config =====
+# ===== Fixed config (WS) =====
 YEAR = 2026
 
-# 这是你正在看的页面（用于拿 csrf / cookie）
+# Page you view (used to obtain csrf/cookies)
 PAGE_EVENT_ID = 30609
 REFERER = f"https://www.live-tennis.cn/zh/survivor/event/{PAGE_EVENT_ID}/{YEAR}/WS/detail"
 
-# 这是表格数据接口用的 event id（从你贴的网页源码里看到是 135）
+# Data API event id (from page source / DataTables ajax url)
 API_EVENT_ID = 135
 API = f"https://www.live-tennis.cn/zh/survivor/event/{API_EVENT_ID}/{YEAR}/detail"
 
 UA = "Mozilla/5.0"
-# =======================
+# =============================
 
-PAGE_SIZE = 200     # if unstable, set to 100
-PAGE_SLEEP = 0.2    # small delay to reduce rate-limit risk
+PAGE_SIZE = 200
+PAGE_SLEEP = 0.2
 
 CONNECT_TIMEOUT = 15
 READ_TIMEOUT = 45
 MAX_PAGE_ATTEMPTS = 5
-# =======================
 
 
 def ask_mmdd_or_argv() -> tuple[str, str]:
@@ -58,16 +62,15 @@ def ask_mmdd_or_argv() -> tuple[str, str]:
 
     Guard:
       If today < START_MMDD (env) then use START_MMDD.
-      Default START_MMDD=0304 (you can change per tournament).
+      Default START_MMDD=0304.
     """
     import os
     from datetime import datetime
     try:
-        from zoneinfo import ZoneInfo  # py3.9+
+        from zoneinfo import ZoneInfo
         tz = ZoneInfo(os.getenv("TZ_NAME", "Asia/Shanghai"))
         now = datetime.now(tz)
     except Exception:
-        # fallback (local time)
         now = datetime.now()
 
     start_mmdd = os.getenv("START_MMDD", "0304").strip()
@@ -97,12 +100,12 @@ def ask_mmdd_or_argv() -> tuple[str, str]:
 
     # 3) auto today
     today_mmdd = now.strftime("%m%d")
-    # guard: before tournament start, pin to start date
     if norm_mmdd(start_mmdd) and today_mmdd < start_mmdd:
         today_mmdd = start_mmdd
 
     mm, dd = today_mmdd[:2], today_mmdd[2:]
     return today_mmdd, f"{mm}/{dd}"
+
 
 def make_session() -> requests.Session:
     s = requests.Session()
@@ -132,7 +135,6 @@ def extract_csrf_from_html(html: str) -> str:
 
 
 def get_xsrf_from_session_cookie(sess: requests.Session) -> str:
-    # Laravel XSRF-TOKEN cookie is often URL-encoded; unquote for header usage
     val = sess.cookies.get("XSRF-TOKEN", "")
     return unquote(val) if val else ""
 
@@ -169,8 +171,6 @@ def post_detail_page(sess: requests.Session, csrf: str, xsrf: str, start: int, l
     }
 
     r = sess.post(API, headers=headers, data=data, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT))
-
-    # Sometimes server returns HTML/empty; guard it
     text = (r.text or "").strip()
     if not text or text[0] not in "{[":
         preview = text[:300].replace("\n", "\\n").replace("\r", "\\r")
@@ -207,7 +207,14 @@ def fetch_page_with_retry(sess: requests.Session, csrf: str, xsrf: str, start: i
     raise RuntimeError(f"Failed to fetch page start={start} after retries.")
 
 
+def ds_to_tag(ds: str) -> str:
+    # "03/04" -> "0304"
+    return (ds or "").replace("/", "")
+
+
 def main():
+    # This tag/date_short is only used to write picks_event{API_EVENT_ID}_{tag}.csv (day view),
+    # counts are now generated for ALL date_short values.
     tag, target_date_short = ask_mmdd_or_argv()
     print(f"[info] target date_short={target_date_short} (tag={tag})", flush=True)
 
@@ -225,7 +232,8 @@ def main():
 
     if total == 0:
         print("[info] recordsTotal=0 (no picks yet). Will output empty csv.", flush=True)
-    pages = math.ceil(total / PAGE_SIZE)
+
+    pages = math.ceil(total / PAGE_SIZE) if total > 0 else 0
     print(f"[info] recordsTotal={total}, pages={pages}", flush=True)
 
     all_items = list(data0)
@@ -241,7 +249,7 @@ def main():
 
     fields = ["day", "date_short", "created_at", "user_id", "username", "fill", "player", "fill_alt", "player_alt"]
 
-    full_rows = []
+    full_rows: list[dict] = []
     for it in all_items:
         full_rows.append({
             "day": it.get("day"),
@@ -255,66 +263,93 @@ def main():
             "player_alt": it.get("player_alt"),
         })
 
-    # Overwrite outputs
+    # Always overwrite full dump
     write_csv(f"picks_event{API_EVENT_ID}.csv", fields, full_rows)
 
-    day_rows = [r for r in full_rows if r.get("date_short") == target_date_short]
+    # Keep a "day view" dump for the chosen target_date_short (optional)
+    day_rows = [r for r in full_rows if (r.get("date_short") or "").strip() == target_date_short]
     out_day = f"picks_event{API_EVENT_ID}_{tag}.csv"
     write_csv(out_day, fields, day_rows)
 
-    main_c = Counter()
-    alt_c = Counter()
-    user_ids = set()
-
-    for r in day_rows:
-        uid = r.get("user_id")
-        if uid is not None:
-            user_ids.add(str(uid))
-
-        p = (r.get("player") or "").strip()
-        pa = (r.get("player_alt") or "").strip()
-        if p:
-            main_c[p] += 1
-        if pa:
-            alt_c[pa] += 1
-
-    main_items = sorted(main_c.items(), key=lambda x: (-x[1], x[0]))
-    alt_items = sorted(alt_c.items(), key=lambda x: (-x[1], x[0]))
-
-    write_counter(f"player_count_{tag}_main.csv", main_items)
-    write_counter(f"player_count_{tag}_alt.csv", alt_items)
-
     print(f"OK: total records (all days) = {len(full_rows)} (recordsTotal={total}) -> picks_event{API_EVENT_ID}.csv (overwritten)")
-    print(f"OK: {target_date_short} rows = {len(day_rows)} -> {out_day} (overwritten)")
-    print(f"OK: {target_date_short} total users (unique user_id) = {len(user_ids)}")
-    print(f"OK: wrote counts (overwritten) -> player_count_{tag}_main.csv / _alt.csv")
+    print(f"OK: day view {target_date_short} rows = {len(day_rows)} -> {out_day} (overwritten)")
+
+    # -------- NEW: counts for ALL date_short --------
+    groups = defaultdict(list)
+    for r in full_rows:
+        ds = (r.get("date_short") or "").strip()
+        if ds:
+            groups[ds].append(r)
+
+    generated_files: list[str] = []  # for publish
+    all_tags: list[str] = []
+
+    for ds in sorted(groups.keys()):
+        rows = groups[ds]
+        tag2 = ds_to_tag(ds)
+        if not re.fullmatch(r"\d{4}", tag2):
+            # skip weird/empty ds
+            continue
+
+        all_tags.append(tag2)
+
+        main_c = Counter()
+        alt_c = Counter()
+        user_ids = set()
+
+        for r in rows:
+            uid = r.get("user_id")
+            if uid is not None:
+                user_ids.add(str(uid))
+
+            p = (r.get("player") or "").strip()
+            pa = (r.get("player_alt") or "").strip()
+            if p:
+                main_c[p] += 1
+            if pa:
+                alt_c[pa] += 1
+
+        main_items = sorted(main_c.items(), key=lambda x: (-x[1], x[0]))
+        alt_items = sorted(alt_c.items(), key=lambda x: (-x[1], x[0]))
+
+        f_main = f"player_count_{tag2}_main.csv"
+        f_alt = f"player_count_{tag2}_alt.csv"
+        write_counter(f_main, main_items)
+        write_counter(f_alt, alt_items)
+
+        generated_files.extend([f_main, f_alt])
+
+        print(f"OK: {ds} rows={len(rows)} users={len(user_ids)} -> {f_main} / {f_alt}")
+
+    # Choose latest tag among observed date_short for docs/data/latest.json
+    latest_tag = sorted(set(all_tags))[-1] if all_tags else None
+    # -------- END NEW --------
 
     # ---- Hybrid model data layer: publish to docs/data ----
-    import os, json, glob, re
+    import os, json, glob
     from datetime import datetime, timezone
 
     data_dir = os.path.join("docs", "data")
     os.makedirs(data_dir, exist_ok=True)
 
-    # Copy today's count csv into docs/data
-    src_main = f"player_count_{tag}_main.csv"
-    src_alt  = f"player_count_{tag}_alt.csv"
-    dst_main = os.path.join(data_dir, src_main)
-    dst_alt  = os.path.join(data_dir, src_alt)
+    # Copy ALL generated player_count files into docs/data (overwrite)
+    published = 0
+    for fn in sorted(set(generated_files)):
+        if not os.path.exists(fn):
+            continue
+        dst = os.path.join(data_dir, fn)
+        with open(fn, "rb") as fsrc, open(dst, "wb") as fdst:
+            fdst.write(fsrc.read())
+        published += 1
 
-    with open(src_main, "rb") as fsrc, open(dst_main, "wb") as fdst:
-        fdst.write(fsrc.read())
-    with open(src_alt, "rb") as fsrc, open(dst_alt, "wb") as fdst:
-        fdst.write(fsrc.read())
-
-    # Build manifest.json from existing main files
+    # Build manifest.json from docs/data main files
     dates = []
     for p in glob.glob(os.path.join(data_dir, "player_count_*_main.csv")):
         m = re.search(r"player_count_(\d{4})_main\.csv$", os.path.basename(p))
         if m:
             dates.append(m.group(1))
     dates = sorted(set(dates))
-    latest = dates[-1] if dates else None
+    latest = latest_tag if latest_tag in dates else (dates[-1] if dates else None)
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     version = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -327,8 +362,9 @@ def main():
     with open(os.path.join(data_dir, "latest.json"), "w", encoding="utf-8") as f:
         json.dump(latest_json, f, ensure_ascii=False, indent=2)
 
-    print(f"[publish] wrote {dst_main}, {dst_alt}", flush=True)
+    print(f"[publish] copied {published} player_count files into {data_dir}", flush=True)
     print(f"[publish] updated docs/data/manifest.json and latest.json (latest={latest}, version={version})", flush=True)
+
 
 if __name__ == "__main__":
     try:
