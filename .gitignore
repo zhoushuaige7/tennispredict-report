@@ -17,3 +17,4 @@ page.html
 *.swp
 *.swo
 picks_event*.csv
+ms_player_count_*.csv
