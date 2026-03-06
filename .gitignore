@@ -5,6 +5,7 @@ __pycache__/
 # Data outputs (generated)
 picks_*.csv
 player_count_*.csv
+ms_player_count_*.csv
 cookiejar.txt
 page.html
 
